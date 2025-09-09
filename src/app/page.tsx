@@ -43,17 +43,20 @@ export default function Home() {
 
   // Show welcome notification on first visit
   useEffect(() => {
-    const hasVisited = localStorage.getItem('farmerai-visited')
-    if (!hasVisited) {
-      setTimeout(() => {
-        addNotification({
-          title: "Welcome to FarmerAI! 🌱",
-          description: "Your smart farming companion is ready to help you make better crop decisions.",
-          type: "success",
-          duration: 6000
-        })
-        localStorage.setItem('farmerai-visited', 'true')
-      }, 1000)
+    // Check if we're in the browser environment
+    if (typeof window !== 'undefined') {
+      const hasVisited = localStorage.getItem('farmerai-visited')
+      if (!hasVisited) {
+        setTimeout(() => {
+          addNotification({
+            title: "Welcome to FarmerAI! 🌱",
+            description: "Your smart farming companion is ready to help you make better crop decisions.",
+            type: "success",
+            duration: 6000
+          })
+          localStorage.setItem('farmerai-visited', 'true')
+        }, 1000)
+      }
     }
   }, [addNotification])
 
