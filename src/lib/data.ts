@@ -138,6 +138,24 @@ export const marketRates: MarketRate[] = [
   },
   {
     id: "2",
+    crop: "Wheat",
+    mandi: "Punjab Mandi",
+    price: 2380,
+    unit: "per quintal",
+    change: 1.8,
+    lastUpdated: "1 hour ago"
+  },
+  {
+    id: "3",
+    crop: "Wheat",
+    mandi: "Haryana Mandi",
+    price: 2420,
+    unit: "per quintal",
+    change: 2.1,
+    lastUpdated: "3 hours ago"
+  },
+  {
+    id: "4",
     crop: "Rice",
     mandi: "Punjab Mandi",
     price: 3200,
@@ -146,7 +164,25 @@ export const marketRates: MarketRate[] = [
     lastUpdated: "1 hour ago"
   },
   {
-    id: "3",
+    id: "5",
+    crop: "Rice",
+    mandi: "West Bengal Mandi",
+    price: 3150,
+    unit: "per quintal",
+    change: -0.8,
+    lastUpdated: "2 hours ago"
+  },
+  {
+    id: "6",
+    crop: "Rice",
+    mandi: "Andhra Pradesh Mandi",
+    price: 3280,
+    unit: "per quintal",
+    change: 0.5,
+    lastUpdated: "1 hour ago"
+  },
+  {
+    id: "7",
     crop: "Maize",
     mandi: "Haryana Mandi",
     price: 1850,
@@ -155,7 +191,16 @@ export const marketRates: MarketRate[] = [
     lastUpdated: "3 hours ago"
   },
   {
-    id: "4",
+    id: "8",
+    crop: "Maize",
+    mandi: "Karnataka Mandi",
+    price: 1920,
+    unit: "per quintal",
+    change: 4.2,
+    lastUpdated: "2 hours ago"
+  },
+  {
+    id: "9",
     crop: "Sugarcane",
     mandi: "UP Mandi",
     price: 320,
@@ -164,7 +209,16 @@ export const marketRates: MarketRate[] = [
     lastUpdated: "4 hours ago"
   },
   {
-    id: "5",
+    id: "10",
+    crop: "Sugarcane",
+    mandi: "Maharashtra Mandi",
+    price: 315,
+    unit: "per quintal",
+    change: 0.2,
+    lastUpdated: "3 hours ago"
+  },
+  {
+    id: "11",
     crop: "Cotton",
     mandi: "Gujarat Mandi",
     price: 6800,
@@ -173,13 +227,67 @@ export const marketRates: MarketRate[] = [
     lastUpdated: "2 hours ago"
   },
   {
-    id: "6",
+    id: "12",
+    crop: "Cotton",
+    mandi: "Punjab Mandi",
+    price: 6750,
+    unit: "per quintal",
+    change: -1.8,
+    lastUpdated: "1 hour ago"
+  },
+  {
+    id: "13",
     crop: "Soybean",
     mandi: "MP Mandi",
     price: 4200,
     unit: "per quintal",
     change: 1.8,
     lastUpdated: "1 hour ago"
+  },
+  {
+    id: "14",
+    crop: "Soybean",
+    mandi: "Rajasthan Mandi",
+    price: 4150,
+    unit: "per quintal",
+    change: 2.1,
+    lastUpdated: "2 hours ago"
+  },
+  {
+    id: "15",
+    crop: "Mustard",
+    mandi: "Rajasthan Mandi",
+    price: 5200,
+    unit: "per quintal",
+    change: 3.2,
+    lastUpdated: "1 hour ago"
+  },
+  {
+    id: "16",
+    crop: "Mustard",
+    mandi: "Haryana Mandi",
+    price: 5150,
+    unit: "per quintal",
+    change: 2.8,
+    lastUpdated: "2 hours ago"
+  },
+  {
+    id: "17",
+    crop: "Groundnut",
+    mandi: "Gujarat Mandi",
+    price: 6800,
+    unit: "per quintal",
+    change: 1.5,
+    lastUpdated: "1 hour ago"
+  },
+  {
+    id: "18",
+    crop: "Groundnut",
+    mandi: "Rajasthan Mandi",
+    price: 6750,
+    unit: "per quintal",
+    change: 1.2,
+    lastUpdated: "2 hours ago"
   }
 ]
 
@@ -229,7 +337,8 @@ export const quickActions = [
     description: "Get AI-powered crop recommendations",
     icon: "Sprout",
     href: "/crop-advisory",
-    color: "bg-green-500"
+    color: "bg-green-500",
+    gradient: "bg-gradient-to-br from-green-50 to-emerald-100 dark:from-green-950 dark:to-emerald-900"
   },
   {
     id: "pest-disease",
@@ -237,7 +346,8 @@ export const quickActions = [
     description: "Identify and treat crop issues",
     icon: "Shield",
     href: "/pest-disease",
-    color: "bg-red-500"
+    color: "bg-red-500",
+    gradient: "bg-gradient-to-br from-red-50 to-rose-100 dark:from-red-950 dark:to-rose-900"
   },
   {
     id: "market-rates",
@@ -245,15 +355,17 @@ export const quickActions = [
     description: "View crop prices in nearby mandis",
     icon: "TrendingUp",
     href: "/market-rates",
-    color: "bg-orange-500"
+    color: "bg-orange-500",
+    gradient: "bg-gradient-to-br from-orange-50 to-amber-100 dark:from-orange-950 dark:to-amber-900"
   },
   {
-    id: "chatbot",
-    title: "AI Assistant",
-    description: "Ask questions about farming",
-    icon: "MessageCircle",
-    href: "/chatbot",
-    color: "bg-purple-500"
+    id: "resource-prediction",
+    title: "Resource Prediction",
+    description: "Plan water, fertilizer & labor needs",
+    icon: "Calculator",
+    href: "/resource-prediction",
+    color: "bg-purple-500",
+    gradient: "bg-gradient-to-br from-purple-50 to-violet-100 dark:from-purple-950 dark:to-violet-900"
   }
 ]
 

@@ -17,6 +17,7 @@ interface FeaturedCardProps {
   progress?: number
   badge?: string
   delay?: number
+  gradient?: string
 }
 
 export function FeaturedCard({ 
@@ -27,7 +28,8 @@ export function FeaturedCard({
   href, 
   progress, 
   badge,
-  delay = 0 
+  delay = 0,
+  gradient
 }: FeaturedCardProps) {
   return (
     <motion.div
@@ -37,7 +39,7 @@ export function FeaturedCard({
       whileHover={{ scale: 1.02 }}
     >
       <Link href={href}>
-        <Card className="h-full cursor-pointer transition-all duration-200 hover:shadow-lg group">
+        <Card className={`h-full cursor-pointer transition-all duration-200 hover:shadow-lg group ${gradient || ''}`}>
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
               <div className={`p-3 rounded-lg ${color} text-white group-hover:scale-110 transition-transform`}>

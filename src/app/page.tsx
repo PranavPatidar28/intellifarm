@@ -20,7 +20,8 @@ import {
   Star,
   Lightbulb,
   Clock,
-  Shield
+  Shield,
+  Calculator
 } from "lucide-react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -35,7 +36,7 @@ const iconMap = {
   Sprout,
   Shield,
   TrendingUp,
-  MessageCircle
+  Calculator
 }
 
 export default function Home() {
@@ -172,6 +173,7 @@ export default function Home() {
                   icon={Icon}
                   color={action.color}
                   href={action.href}
+                  gradient={action.gradient}
                   progress={index === 0 ? 75 : index === 1 ? 60 : undefined}
                   badge={index === 0 ? "" : undefined}
                   delay={0.3 + index * 0.1}
