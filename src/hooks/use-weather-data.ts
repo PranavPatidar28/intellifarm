@@ -35,11 +35,11 @@ export function useWeatherData(options: UseWeatherDataOptions = {}): UseWeatherD
   } = options
 
   // Get location using the location hook
-  const { 
-    coordinates, 
-    loading: locationLoading, 
+  const {
+    coordinates,
+    loading: locationLoading,
     error: locationError,
-    refreshLocation 
+    refreshLocation
   } = useLocation()
 
   // Weather state
@@ -56,12 +56,12 @@ export function useWeatherData(options: UseWeatherDataOptions = {}): UseWeatherD
     if (!coordinates || !enabled) return
 
     const coordsKey = `${coordinates.latitude},${coordinates.longitude}`
-    
+
     setLoading(true)
     setError(null)
 
     try {
-      // console.log('🌤️ Fetching weather data for:', coordinates)
+      console.log('🌤️ Fetching weather data for:', coordinates)
       const data = await weatherApi.getWeatherData(
         coordinates.latitude,
         coordinates.longitude
@@ -71,7 +71,7 @@ export function useWeatherData(options: UseWeatherDataOptions = {}): UseWeatherD
         setWeatherData(data)
         setLastUpdated(new Date())
         lastFetchedCoords.current = coordsKey
-        // console.log('✅ Weather data updated successfully')
+        console.log('✅ Weather data updated successfully:', data.location?.name)
       } else {
         setError('Failed to fetch weather data')
       }
@@ -86,12 +86,17 @@ export function useWeatherData(options: UseWeatherDataOptions = {}): UseWeatherD
 
   // Fetch weather when coordinates change
   useEffect(() => {
-    if (!coordinates || !enabled) return
+    if (!coordinates || !enabled) {
+      console.log('⏸️ Skipping weather fetch - coordinates:', coordinates, 'enabled:', enabled)
+      return
+    }
 
     const coordsKey = `${coordinates.latitude},${coordinates.longitude}`
-    
-    // Only fetch if coordinates changed
+    console.log('📍 Coordinates available:', coordsKey, 'Last fetched:', lastFetchedCoords.current)
+
+    // Fetch if coordinates changed (including first time when lastFetchedCoords is null)
     if (lastFetchedCoords.current !== coordsKey) {
+      console.log('🌤️ Triggering weather fetch for new coordinates')
       fetchWeather()
     }
   }, [coordinates, enabled, fetchWeather])
@@ -101,7 +106,7 @@ export function useWeatherData(options: UseWeatherDataOptions = {}): UseWeatherD
     if (!enabled || !autoRefreshInterval || autoRefreshInterval <= 0) return
 
     // console.log(`⏰ Setting up weather auto-refresh: ${autoRefreshInterval / 1000}s`)
-    
+
     const interval = setInterval(() => {
       if (coordinates) {
         // console.log('🔄 Auto-refreshing weather data...')
