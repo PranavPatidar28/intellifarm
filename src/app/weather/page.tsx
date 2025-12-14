@@ -15,13 +15,16 @@ import {
   Sunset,
   Gauge,
   AlertTriangle,
-  Calendar
+  Calendar,
+  AlertCircle
 } from "lucide-react"
+import { useMemo, useCallback } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { MobileNav } from "@/components/mobile-nav"
 import { weatherData } from "@/lib/data"
+import { useWeatherData } from "@/hooks/use-weather-data"
 import Link from "next/link"
 
 const weatherIcons = {
@@ -32,22 +35,34 @@ const weatherIcons = {
 }
 
 export default function WeatherPage() {
-  const current = weatherData.current
-  const forecast = weatherData.forecast
+  const { weatherData: realWeatherData, loading, error, refresh, lastUpdated, locationError } = useWeatherData()
+  
+  // Use real data if available, otherwise fallback to dummy data
+  const current = useMemo(() => realWeatherData?.current || weatherData.current, [realWeatherData?.current, weatherData.current])
+  const forecast = useMemo(() => realWeatherData?.forecast || weatherData.forecast, [realWeatherData?.forecast, weatherData.forecast])
+  const location = useMemo(() => realWeatherData?.location || weatherData.location, [realWeatherData?.location, weatherData.location])
+  const hasError = useMemo(() => error || locationError, [error, locationError])
+  
+  // Check if we're using mock data (API key not configured)
+  const isUsingMockData = useMemo(() => 
+    !process.env.NEXT_PUBLIC_OPENWEATHER_API_KEY || 
+    process.env.NEXT_PUBLIC_OPENWEATHER_API_KEY === 'your_openweather_api_key_here',
+    []
+  )
 
-  const getWeatherIcon = (condition: string) => {
+  const getWeatherIcon = useCallback((condition: string) => {
     const iconKey = condition.toLowerCase().replace(/\s+/g, '-')
     const Icon = weatherIcons[iconKey as keyof typeof weatherIcons] || Cloud
     return Icon
-  }
+  }, [])
 
-  const getWeatherColor = (condition: string) => {
+  const getWeatherColor = useCallback((condition: string) => {
     const conditionLower = condition.toLowerCase()
     if (conditionLower.includes('sunny')) return 'from-yellow-400 to-orange-500'
     if (conditionLower.includes('rainy')) return 'from-blue-500 to-blue-600'
     if (conditionLower.includes('cloudy')) return 'from-gray-400 to-gray-500'
     return 'from-blue-400 to-blue-500'
-  }
+  }, [])
 
   return (
     <div className="min-h-screen bg-background">
@@ -68,40 +83,115 @@ export default function WeatherPage() {
                   </Link>
                 </Button>
                 <div>
-                  <h1 className="text-3xl font-bold">Weather Forecast</h1>
-                  <p className="text-muted-foreground">Current and 7-day weather forecast</p>
+                  <div>
+                    <h1 className="text-3xl font-bold flex items-center gap-3">
+                      Weather Forecast
+                      {isUsingMockData && (
+                        <span className="text-sm bg-yellow-100 text-yellow-800 px-3 py-1 rounded-full">
+                          Demo Mode
+                        </span>
+                      )}
+                    </h1>
+                    <p className="text-muted-foreground">
+                      {isUsingMockData ? 'Demo weather data - Add API key for real data' : 'Current and 7-day weather forecast'}
+                    </p>
+                    
+                  </div>
                 </div>
               </div>
-              <Button variant="outline" size="icon">
-                <RefreshCw className="h-4 w-4" />
+              <Button 
+                variant="outline" 
+                size="icon"
+                onClick={refresh}
+                disabled={loading}
+              >
+                <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
               </Button>
             </div>
 
-            {/* Weather Alerts - Moved to top */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2 }}
-            >
-              <Card className="border-orange-200 bg-orange-50 dark:border-orange-800 dark:bg-orange-950">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2 text-orange-800 dark:text-orange-200">
-                    <AlertTriangle className="h-5 w-5" />
-                    Weather Alert
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-2">
-                    <p className="text-orange-700 dark:text-orange-300 font-medium">
-                      Heavy rainfall expected on Wednesday
-                    </p>
-                    <p className="text-orange-600 dark:text-orange-400 text-sm">
-                      Prepare for potential flooding in low-lying areas. Consider delaying outdoor farming activities.
-                    </p>
-                  </div>
-                </CardContent>
-              </Card>
-            </motion.div>
+            {/* Setup Instructions for Demo Mode */}
+            {isUsingMockData && (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.1 }}
+              >
+                <Card className="border-blue-200 bg-blue-50 dark:border-blue-800 dark:bg-blue-950">
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2 text-blue-800 dark:text-blue-200">
+                      <Cloud className="h-5 w-5" />
+                      Get Real Weather Data
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-3">
+                      <p className="text-blue-700 dark:text-blue-300">
+                        You're currently viewing demo weather data. To get real-time weather information:
+                      </p>
+                      <div className="space-y-2 text-sm">
+                        <div className="flex items-start gap-2">
+                          <span className="bg-blue-600 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold">1</span>
+                          <span className="text-blue-600 dark:text-blue-400">Get a free API key from <a href="https://openweathermap.org/api" target="_blank" rel="noopener noreferrer" className="underline">OpenWeatherMap</a></span>
+                        </div>
+                        <div className="flex items-start gap-2">
+                          <span className="bg-blue-600 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold">2</span>
+                          <span className="text-blue-600 dark:text-blue-400">Create a <code className="bg-blue-200 dark:bg-blue-800 px-1 rounded">.env.local</code> file in your project root</span>
+                        </div>
+                        <div className="flex items-start gap-2">
+                          <span className="bg-blue-600 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold">3</span>
+                          <span className="text-blue-600 dark:text-blue-400">Add: <code className="bg-blue-200 dark:bg-blue-800 px-1 rounded">NEXT_PUBLIC_OPENWEATHER_API_KEY=your_key</code></span>
+                        </div>
+                        <div className="flex items-start gap-2">
+                          <span className="bg-blue-600 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold">4</span>
+                          <span className="text-blue-600 dark:text-blue-400">Restart your development server</span>
+                        </div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </motion.div>
+            )}
+
+            {/* Weather Alerts - Show API errors or weather alerts */}
+            {(hasError || forecast.some(day => day.precipitation > 70)) && (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.2 }}
+              >
+                <Card className={`border-orange-200 bg-orange-50 dark:border-orange-800 dark:bg-orange-950 ${hasError ? 'border-red-200 bg-red-50 dark:border-red-800 dark:bg-red-950' : ''}`}>
+                  <CardHeader>
+                    <CardTitle className={`flex items-center gap-2 ${hasError ? 'text-red-800 dark:text-red-200' : 'text-orange-800 dark:text-orange-200'}`}>
+                      {hasError ? <AlertCircle className="h-5 w-5" /> : <AlertTriangle className="h-5 w-5" />}
+                      {hasError ? 'Weather Data Error' : 'Weather Alert'}
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-2">
+                      {hasError ? (
+                        <>
+                          <p className="text-red-700 dark:text-red-300 font-medium">
+                            Unable to fetch real-time weather data
+                          </p>
+                          <p className="text-red-600 dark:text-red-400 text-sm">
+                            {locationError || error || 'Please check your internet connection and try again.'}
+                          </p>
+                        </>
+                      ) : (
+                        <>
+                          <p className="text-orange-700 dark:text-orange-300 font-medium">
+                            Heavy rainfall expected on Wednesday
+                          </p>
+                          <p className="text-orange-600 dark:text-orange-400 text-sm">
+                            Prepare for potential flooding in low-lying areas. Consider delaying outdoor farming activities.
+                          </p>
+                        </>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+              </motion.div>
+            )}
 
             {/* Current Weather */}
             <motion.div
@@ -112,7 +202,15 @@ export default function WeatherPage() {
               <Card className={`bg-gradient-to-r ${getWeatherColor(current.condition)} text-white border-0 overflow-hidden`}>
                 <CardHeader className="pb-4">
                   <div className="flex items-center justify-between">
-                    <CardTitle className="text-2xl">Current Weather</CardTitle>
+                    <div>
+                      <CardTitle className="text-2xl">Current Weather</CardTitle>
+                      {location && (
+                        <div className="text-sm text-white/80 mt-1">
+                          {location.name}
+                          {location.country && `, ${location.country}`}
+                        </div>
+                      )}
+                    </div>
                     <div className="p-2 bg-white/20 rounded-lg">
                       {(() => {
                         const Icon = getWeatherIcon(current.condition)
@@ -121,7 +219,7 @@ export default function WeatherPage() {
                     </div>
                   </div>
                   <CardDescription className="text-white/80">
-                    Last updated 2 minutes ago
+                    {lastUpdated ? `Last updated ${new Date(lastUpdated).toLocaleTimeString()}` : 'Loading...'}
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -157,14 +255,14 @@ export default function WeatherPage() {
                         <Eye className="h-5 w-5" />
                         <div>
                           <div className="text-sm text-white/80">Visibility</div>
-                          <div className="text-lg font-semibold">10 km</div>
+                          <div className="text-lg font-semibold">{current.visibility || 10} km</div>
                         </div>
                       </div>
                       <div className="flex items-center gap-3">
                         <Thermometer className="h-5 w-5" />
                         <div>
                           <div className="text-sm text-white/80">Feels Like</div>
-                          <div className="text-lg font-semibold">{current.temperature + 2}°</div>
+                          <div className="text-lg font-semibold">{current.feelsLike || current.temperature + 2}°</div>
                         </div>
                       </div>
                     </div>
@@ -326,11 +424,11 @@ export default function WeatherPage() {
                   <div className="space-y-3">
                     <div className="flex items-center justify-between">
                       <span className="text-sm text-muted-foreground">Sunrise</span>
-                      <span className="font-medium">6:45 AM</span>
+                      <span className="font-medium">{current.sunrise || '6:45 AM'}</span>
                     </div>
                     <div className="flex items-center justify-between">
                       <span className="text-sm text-muted-foreground">Sunset</span>
-                      <span className="font-medium">6:15 PM</span>
+                      <span className="font-medium">{current.sunset || '6:15 PM'}</span>
                     </div>
                     <div className="flex items-center justify-between">
                       <span className="text-sm text-muted-foreground">Day Length</span>
@@ -351,7 +449,7 @@ export default function WeatherPage() {
                   <div className="space-y-3">
                     <div className="flex items-center justify-between">
                       <span className="text-sm text-muted-foreground">Pressure</span>
-                      <span className="font-medium">1013 hPa</span>
+                      <span className="font-medium">{current.pressure || 1013} hPa</span>
                     </div>
                     <div className="flex items-center justify-between">
                       <span className="text-sm text-muted-foreground">UV Index</span>

@@ -284,19 +284,19 @@ export default function ResourcePredictionPage() {
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-4">
-                      <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                      <div className="flex justify-between items-center p-3 rounded-lg border-1 border-gray-700">
                         <span className="font-medium">Water Cost</span>
                         <span className="font-bold">₹{resources.cost.water.toFixed(0)}</span>
                       </div>
-                      <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                      <div className="flex justify-between items-center p-3 rounded-lg border-1 border-gray-700">
                         <span className="font-medium">Fertilizer Cost</span>
                         <span className="font-bold">₹{resources.cost.fertilizer.toFixed(0)}</span>
                       </div>
-                      <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                      <div className="flex justify-between items-center p-3 rounded-lg border-1 border-gray-700">
                         <span className="font-medium">Labor Cost</span>
                         <span className="font-bold">₹{resources.cost.labor.toFixed(0)}</span>
                       </div>
-                      <div className="flex justify-between items-center p-4 bg-orange-50 rounded-lg border-2 border-orange-200">
+                      <div className="flex justify-between items-center p-4 rounded-lg border-2 border-orange-200">
                         <span className="font-bold text-lg">Total Estimated Cost</span>
                         <span className="font-bold text-xl text-orange-600">
                           ₹{(resources.cost.water + resources.cost.fertilizer + resources.cost.labor).toFixed(0)}

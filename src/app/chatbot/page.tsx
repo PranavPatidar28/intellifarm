@@ -2,31 +2,34 @@
 
 import { useState, useRef, useEffect } from "react"
 import { motion, AnimatePresence } from "framer-motion"
-import { 
-  MessageCircle, 
-  Send, 
-  Mic, 
+import {
+  Send,
+  Mic,
   MicOff,
   ArrowLeft,
   Bot,
   User,
-  Loader2
+  Loader2,
+  AlertCircle,
+  Sparkles
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { MobileNav } from "@/components/mobile-nav"
-import { sampleChatMessages, ChatMessage } from "@/lib/data"
+import { ChatMessage } from "@/lib/data"
 import Link from "next/link"
 
 export default function ChatbotPage() {
-  const [messages, setMessages] = useState<ChatMessage[]>(sampleChatMessages)
+  const [messages, setMessages] = useState<ChatMessage[]>([])
   const [inputMessage, setInputMessage] = useState("")
   const [isTyping, setIsTyping] = useState(false)
   const [isListening, setIsListening] = useState(false)
+  const [isConnected, setIsConnected] = useState(true)
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
+  const abortControllerRef = useRef<AbortController | null>(null)
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
@@ -36,8 +39,25 @@ export default function ChatbotPage() {
     scrollToBottom()
   }, [messages])
 
+  // Initialize welcome message on client side only to avoid hydration mismatch
+  useEffect(() => {
+    setMessages([{
+      id: "welcome",
+      type: "ai",
+      message: "Namaste! 🙏 I'm IntelliFarm AI, your smart farming assistant. I can help you with crop cultivation, pest management, weather advice, market prices, government schemes, and more. How can I assist you today?",
+      timestamp: new Date()
+    }])
+  }, [])
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      abortControllerRef.current?.abort()
+    }
+  }, [])
+
   const handleSendMessage = async () => {
-    if (!inputMessage.trim()) return
+    if (!inputMessage.trim() || isTyping) return
 
     const userMessage: ChatMessage = {
       id: Date.now().toString(),
@@ -46,51 +66,110 @@ export default function ChatbotPage() {
       timestamp: new Date()
     }
 
+    const currentInput = inputMessage
     setMessages(prev => [...prev, userMessage])
     setInputMessage("")
     setIsTyping(true)
+    setIsConnected(true)
 
-    // Simulate AI response
-    setTimeout(() => {
-      const aiResponse: ChatMessage = {
-        id: (Date.now() + 1).toString(),
-        type: "ai",
-        message: getAIResponse(inputMessage),
-        timestamp: new Date()
+    // Create placeholder AI message for streaming
+    const aiMessageId = (Date.now() + 1).toString()
+    const aiMessage: ChatMessage = {
+      id: aiMessageId,
+      type: "ai",
+      message: "",
+      timestamp: new Date()
+    }
+    setMessages(prev => [...prev, aiMessage])
+
+    try {
+      // Abort any existing request
+      abortControllerRef.current?.abort()
+      abortControllerRef.current = new AbortController()
+
+      // Build conversation history for context
+      const history = messages
+        .filter(m => m.id !== "welcome")
+        .map(m => ({
+          role: m.type === "user" ? "user" as const : "assistant" as const,
+          content: m.message
+        }))
+
+      const response = await fetch("/api/chat", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          message: currentInput,
+          history: history.slice(-10) // Keep last 10 messages for context
+        }),
+        signal: abortControllerRef.current.signal
+      })
+
+      if (!response.ok) {
+        throw new Error("Failed to get response from AI")
       }
-      setMessages(prev => [...prev, aiResponse])
-      setIsTyping(false)
-    }, 1500)
-  }
 
-  const getAIResponse = (userMessage: string): string => {
-    const message = userMessage.toLowerCase()
-    
-    if (message.includes("wheat") || message.includes("गेहूं")) {
-      return "Wheat is a great choice for Rabi season! The optimal sowing time is mid-October to mid-November. Make sure to use certified seeds and maintain proper spacing of 20-25 cm between rows. Apply balanced fertilizer with 50kg N, 25kg P, and 25kg K per acre."
+      // Handle streaming response
+      const reader = response.body?.getReader()
+      const decoder = new TextDecoder()
+
+      if (!reader) {
+        throw new Error("No response body")
+      }
+
+      let fullResponse = ""
+
+      while (true) {
+        const { done, value } = await reader.read()
+
+        if (done) break
+
+        const chunk = decoder.decode(value, { stream: true })
+        fullResponse += chunk
+
+        // Update message with streamed content
+        setMessages(prev =>
+          prev.map(m =>
+            m.id === aiMessageId
+              ? { ...m, message: fullResponse }
+              : m
+          )
+        )
+      }
+
+      // If empty response, show fallback
+      if (!fullResponse.trim()) {
+        setMessages(prev =>
+          prev.map(m =>
+            m.id === aiMessageId
+              ? { ...m, message: "I apologize, but I couldn't generate a response. Please try asking your question again." }
+              : m
+          )
+        )
+      }
+
+    } catch (error) {
+      console.error("Chat error:", error)
+
+      if ((error as Error).name === "AbortError") {
+        return // Request was cancelled
+      }
+
+      setIsConnected(false)
+
+      // Update the AI message with error
+      setMessages(prev =>
+        prev.map(m =>
+          m.id === aiMessageId
+            ? { ...m, message: "I'm having trouble connecting to my brain right now. 🔧 Please make sure Ollama is running locally, or try again in a moment." }
+            : m
+        )
+      )
+    } finally {
+      setIsTyping(false)
     }
-    
-    if (message.includes("rice") || message.includes("चावल")) {
-      return "Rice cultivation requires careful water management. For Kharif season, prepare nursery beds 25-30 days before transplanting. Use 40-50 kg seeds per hectare and maintain 2-3 cm water depth. Watch out for zinc deficiency and apply zinc sulfate if needed."
-    }
-    
-    if (message.includes("weather") || message.includes("मौसम")) {
-      return "Current weather shows 28°C with 65% humidity. There's a 20% chance of rain today. For the next 7 days, expect mostly sunny weather with some clouds. This is good weather for most farming activities. Avoid irrigation during peak heat hours."
-    }
-    
-    if (message.includes("pest") || message.includes("कीट")) {
-      return "For pest management, I recommend integrated pest management (IPM) approach. Monitor your crops regularly, use natural predators when possible, and apply pesticides only when necessary. Neem oil is a good organic option for many common pests."
-    }
-    
-    if (message.includes("fertilizer") || message.includes("खाद")) {
-      return "Soil testing is crucial before applying fertilizers. Generally, for most crops, use NPK in balanced proportions. Organic fertilizers like compost and manure improve soil health long-term. Apply fertilizers based on crop growth stages and soil conditions."
-    }
-    
-    if (message.includes("price") || message.includes("कीमत") || message.includes("market")) {
-      return "Current market rates: Wheat ₹2,450/quintal (+2.5%), Rice ₹3,200/quintal (-1.2%), Maize ₹1,850/quintal (+3.8%). Prices are updated hourly. Consider selling wheat now as prices are rising, while rice prices are stable."
-    }
-    
-    return "I'm here to help with all your farming questions! You can ask me about crop cultivation, weather, pest management, fertilizers, market prices, or any other agricultural topic. What would you like to know?"
   }
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
@@ -113,17 +192,17 @@ export default function ChatbotPage() {
   }
 
   const quickQuestions = [
-    "Best time to plant wheat?",
-    "How to control pests?",
-    "Current market prices?",
-    "Weather forecast?",
-    "Fertilizer recommendations?"
+    "🌾 Best time to sow wheat?",
+    "🐛 How to manage pests organically?",
+    "💰 What is the MSP for rice?",
+    "🌧️ How much water does sugarcane need?",
+    "🌱 Which fertilizer for tomatoes?"
   ]
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
       <MobileNav />
-      
+
       {/* Chat Header */}
       <div className="sticky top-16 z-40 bg-background border-b">
         <div className="container mx-auto px-4 py-4">
@@ -134,16 +213,32 @@ export default function ChatbotPage() {
               </Link>
             </Button>
             <div className="flex items-center gap-3">
-              <div className="p-2 rounded-full bg-primary">
-                <Bot className="h-6 w-6 text-primary-foreground" />
+              <div className="p-2 rounded-full bg-gradient-to-br from-green-500 to-emerald-600">
+                <Sparkles className="h-6 w-6 text-white" />
               </div>
               <div>
-                <h1 className="text-xl font-bold">AI Farming Assistant</h1>
-                <p className="text-sm text-muted-foreground">Ask me anything about farming</p>
+                <h1 className="text-xl font-bold">IntelliFarm AI</h1>
+                <p className="text-sm text-muted-foreground">Your smart farming assistant</p>
               </div>
             </div>
-            <Badge variant="secondary" className="ml-auto bg-green-100 text-green-800">
-              Online
+            <Badge
+              variant="secondary"
+              className={`ml-auto ${isConnected
+                ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
+                : "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
+                }`}
+            >
+              {isConnected ? (
+                <>
+                  <span className="w-2 h-2 rounded-full bg-green-500 mr-2 animate-pulse" />
+                  Online
+                </>
+              ) : (
+                <>
+                  <AlertCircle className="h-3 w-3 mr-1" />
+                  Offline
+                </>
+              )}
             </Badge>
           </div>
         </div>
@@ -163,33 +258,30 @@ export default function ChatbotPage() {
                 className={`flex ${message.type === "user" ? "justify-end" : "justify-start"}`}
               >
                 <div className={`flex items-start gap-3 max-w-[80%] ${message.type === "user" ? "flex-row-reverse" : ""}`}>
-                  <div className={`p-2 rounded-full ${
-                    message.type === "user" 
-                      ? "bg-primary text-primary-foreground" 
-                      : "bg-muted"
-                  }`}>
+                  <div className={`p-2 rounded-full ${message.type === "user"
+                    ? "bg-primary text-primary-foreground"
+                    : "bg-muted"
+                    }`}>
                     {message.type === "user" ? (
                       <User className="h-4 w-4" />
                     ) : (
                       <Bot className="h-4 w-4" />
                     )}
                   </div>
-                  
-                  <Card className={`${
-                    message.type === "user" 
-                      ? "bg-primary text-primary-foreground" 
-                      : "bg-muted"
-                  }`}>
+
+                  <Card className={`${message.type === "user"
+                    ? "bg-primary text-primary-foreground"
+                    : "bg-muted"
+                    }`}>
                     <CardContent className="p-3">
                       <p className="text-sm">{message.message}</p>
-                      <p className={`text-xs mt-1 ${
-                        message.type === "user" 
-                          ? "text-primary-foreground/70" 
-                          : "text-muted-foreground"
-                      }`}>
-                        {message.timestamp.toLocaleTimeString([], { 
-                          hour: '2-digit', 
-                          minute: '2-digit' 
+                      <p className={`text-xs mt-1 ${message.type === "user"
+                        ? "text-primary-foreground/70"
+                        : "text-muted-foreground"
+                        }`}>
+                        {message.timestamp.toLocaleTimeString([], {
+                          hour: '2-digit',
+                          minute: '2-digit'
                         })}
                       </p>
                     </CardContent>
@@ -284,7 +376,7 @@ export default function ChatbotPage() {
               <Send className="h-4 w-4" />
             </Button>
           </div>
-          
+
           {isListening && (
             <motion.div
               initial={{ opacity: 0, y: 10 }}

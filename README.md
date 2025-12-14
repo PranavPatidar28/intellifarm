@@ -1,4 +1,22 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# IntelliFarm - Smart Farming Assistant
+
+This is a [Next.js](https://nextjs.org) project for an intelligent farming assistant that provides weather forecasts, crop advisory, market rates, and more.
+
+## Environment Setup
+
+Before running the application, you need to set up environment variables:
+
+1. Create a `.env.local` file in the root directory
+2. Add your OpenWeather API key:
+
+```bash
+# OpenWeather API Configuration
+# Get your free API key from: https://openweathermap.org/api
+NEXT_PUBLIC_OPENWEATHER_API_KEY=your_openweather_api_key_here
+
+# Optional: Default city for weather (fallback when location is not available)
+NEXT_PUBLIC_DEFAULT_CITY=Delhi
+```
 
 ## Getting Started
 

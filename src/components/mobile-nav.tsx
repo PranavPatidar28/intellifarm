@@ -37,7 +37,7 @@ export function MobileNav() {
             <div className="h-8 w-8 rounded-lg bg-primary flex items-center justify-center">
               <Sprout className="h-5 w-5 text-primary-foreground" />
             </div>
-            <span className="text-xl font-bold text-foreground">FarmerAI</span>
+            <span className="text-xl font-bold text-foreground">Intellifarm</span>
           </div>
           
           <div className="flex items-center gap-2">
@@ -77,7 +77,7 @@ export function MobileNav() {
                   <div className="h-8 w-8 rounded-lg bg-primary flex items-center justify-center">
                     <Sprout className="h-5 w-5 text-primary-foreground" />
                   </div>
-                  <span className="text-xl font-bold">FarmerAI</span>
+                  <span className="text-xl font-bold">Intellifarm</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <ThemeToggle />
@@ -128,7 +128,7 @@ export function MobileNav() {
               <div className="h-8 w-8 rounded-lg bg-primary flex items-center justify-center">
                 <Sprout className="h-5 w-5 text-primary-foreground" />
               </div>
-              <span className="text-xl font-bold">FarmerAI</span>
+              <span className="text-xl font-bold">Intellifarm</span>
             </div>
             <ThemeToggle />
           </div>

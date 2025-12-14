@@ -2,31 +2,30 @@
 
 import { useState, useMemo } from "react"
 import { motion } from "framer-motion"
-import { 
-  TrendingUp, 
+import {
+  TrendingUp,
   TrendingDown,
   Search,
-  Filter,
   ArrowLeft,
   MapPin,
-  Clock,
   RefreshCw,
   Bell,
-  Star,
   BarChart3,
   Target,
-  AlertTriangle,
-  CheckCircle,
-  Eye,
-  Calendar,
   Download
 } from "lucide-react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
-import { Progress } from "@/components/ui/progress"
 import { MobileNav } from "@/components/mobile-nav"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 import { marketRates } from "@/lib/data"
 import Link from "next/link"
 
@@ -35,13 +34,12 @@ export default function MarketRatesPage() {
   const [selectedMandi, setSelectedMandi] = useState("all")
   const [selectedCrop, setSelectedCrop] = useState("all")
   const [sortBy, setSortBy] = useState("price")
-  const [viewMode, setViewMode] = useState<"grid" | "list">("list")
   const [priceAlerts, setPriceAlerts] = useState<string[]>([])
 
   const filteredRates = useMemo(() => {
-    let filtered = marketRates.filter(rate => {
+    const filtered = marketRates.filter(rate => {
       const matchesSearch = rate.crop.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                           rate.mandi.toLowerCase().includes(searchTerm.toLowerCase())
+        rate.mandi.toLowerCase().includes(searchTerm.toLowerCase())
       const matchesMandi = selectedMandi === "all" || rate.mandi.toLowerCase().includes(selectedMandi.toLowerCase())
       const matchesCrop = selectedCrop === "all" || rate.crop.toLowerCase() === selectedCrop.toLowerCase()
       return matchesSearch && matchesMandi && matchesCrop
@@ -79,14 +77,13 @@ export default function MarketRatesPage() {
     const totalMandis = uniqueMandis.length
     const risingPrices = marketRates.filter(rate => rate.change > 0).length
     const fallingPrices = marketRates.filter(rate => rate.change < 0).length
-    const stablePrices = marketRates.filter(rate => rate.change === 0).length
-    
+
     // Calculate average price by crop
     const cropAverages = uniqueCrops.map(crop => {
       const cropRates = marketRates.filter(rate => rate.crop === crop)
-      const avgPrice = cropRates.reduce((sum, rate) => sum + rate.price, 0) / cropRates.length
+      // const avgPrice = cropRates.reduce((sum, rate) => sum + rate.price, 0) / cropRates.length
       const bestMandi = cropRates.reduce((best, rate) => rate.price > best.price ? rate : best)
-      return { crop, avgPrice, bestMandi }
+      return { crop, bestMandi }
     })
 
     return {
@@ -94,7 +91,6 @@ export default function MarketRatesPage() {
       totalMandis,
       risingPrices,
       fallingPrices,
-      stablePrices,
       cropAverages
     }
   }, [uniqueCrops, uniqueMandis])
@@ -120,8 +116,8 @@ export default function MarketRatesPage() {
   }
 
   const togglePriceAlert = (cropId: string) => {
-    setPriceAlerts(prev => 
-      prev.includes(cropId) 
+    setPriceAlerts(prev =>
+      prev.includes(cropId)
         ? prev.filter(id => id !== cropId)
         : [...prev, cropId]
     )
@@ -252,59 +248,125 @@ export default function MarketRatesPage() {
                         className="pl-10"
                       />
                     </div>
-                    
+
                     {/* Filter Controls */}
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                       <div>
                         <label className="text-sm font-medium mb-1 block">Crop</label>
-                        <select
+                        <Select
                           value={selectedCrop}
-                          onChange={(e) => setSelectedCrop(e.target.value)}
-                          className="w-full px-3 py-2 border border-input bg-background rounded-md text-sm"
+                          onValueChange={setSelectedCrop}
                         >
-                          <option value="all">All Crops</option>
-                          {uniqueCrops.map(crop => (
-                            <option key={crop} value={crop}>
-                              {crop}
-                            </option>
-                          ))}
-                        </select>
+                          <SelectTrigger className="w-full">
+                            <SelectValue placeholder="Select Crop" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="all">All Crops</SelectItem>
+                            {uniqueCrops.map(crop => (
+                              <SelectItem key={crop} value={crop}>
+                                {crop}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
                       </div>
-                      
+
                       <div>
                         <label className="text-sm font-medium mb-1 block">Mandi</label>
-                        <select
+                        <Select
                           value={selectedMandi}
-                          onChange={(e) => setSelectedMandi(e.target.value)}
-                          className="w-full px-3 py-2 border border-input bg-background rounded-md text-sm"
+                          onValueChange={setSelectedMandi}
                         >
-                          <option value="all">All Mandis</option>
-                          {uniqueMandis.map(mandi => (
-                            <option key={mandi} value={mandi}>
-                              {mandi}
-                            </option>
-                          ))}
-                        </select>
+                          <SelectTrigger className="w-full">
+                            <SelectValue placeholder="Select Mandi" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="all">All Mandis</SelectItem>
+                            {uniqueMandis.map(mandi => (
+                              <SelectItem key={mandi} value={mandi}>
+                                {mandi}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
                       </div>
-                      
+
                       <div>
                         <label className="text-sm font-medium mb-1 block">Sort By</label>
-                        <select
+                        <Select
                           value={sortBy}
-                          onChange={(e) => setSortBy(e.target.value)}
-                          className="w-full px-3 py-2 border border-input bg-background rounded-md text-sm"
+                          onValueChange={setSortBy}
                         >
-                          <option value="price">Sort by Price</option>
-                          <option value="change">Sort by Change</option>
-                          <option value="crop">Sort by Crop</option>
-                          <option value="mandi">Sort by Mandi</option>
-                        </select>
+                          <SelectTrigger className="w-full">
+                            <SelectValue placeholder="Sort by" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="price">Sort by Price</SelectItem>
+                            <SelectItem value="change">Sort by Change</SelectItem>
+                            <SelectItem value="crop">Sort by Crop</SelectItem>
+                            <SelectItem value="mandi">Sort by Mandi</SelectItem>
+                          </SelectContent>
+                        </Select>
                       </div>
                     </div>
                   </div>
                 </CardContent>
               </Card>
             </motion.div>
+
+            {/* Live Market Rates List */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.4 }}
+            >
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <TrendingUp className="h-5 w-5" />
+                    Live Market Rates
+                  </CardTitle>
+                  <CardDescription>
+                    Real-time prices from all mandis
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    {filteredRates.length === 0 ? (
+                      <div className="text-center py-8 text-muted-foreground">
+                        No market rates found matching your criteria
+                      </div>
+                    ) : (
+                      <div className="rounded-md border">
+                        <div className="grid grid-cols-4 gap-4 p-4 bg-muted font-medium text-sm">
+                          <div>Crop</div>
+                          <div>Mandi</div>
+                          <div className="text-right">Price</div>
+                          <div className="text-right">Change</div>
+                        </div>
+                        <div className="divide-y">
+                          {filteredRates.map((rate) => (
+                            <div key={rate.id} className="grid grid-cols-4 gap-4 p-4 text-sm items-center hover:bg-muted/50 transition-colors">
+                              <div className="font-medium">{rate.crop}</div>
+                              <div className="text-muted-foreground">{rate.mandi}</div>
+                              <div className="text-right font-medium">{formatPrice(rate.price)}</div>
+                              <div className={`text-right flex justify-end items-center gap-1 ${getChangeColor(rate.change)}`}>
+                                {(() => {
+                                  const ChangeIcon = getChangeIcon(rate.change)
+                                  return <ChangeIcon className="h-3 w-3" />
+                                })()}
+                                {rate.change > 0 ? '+' : ''}{rate.change}%
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            </motion.div>
+
 
             {/* Best Prices by Crop */}
             <motion.div
@@ -354,181 +416,10 @@ export default function MarketRatesPage() {
                               {item.bestMandi.change > 0 ? '+' : ''}{item.bestMandi.change}%
                             </span>
                           </div>
-                          <span className="text-xs text-muted-foreground">
-                            {item.bestMandi.lastUpdated}
-                          </span>
                         </div>
                       </motion.div>
                     ))}
                   </div>
-                </CardContent>
-              </Card>
-            </motion.div>
-
-            {/* Market Rates List */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.4 }}
-            >
-              <Card>
-                <CardHeader>
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <CardTitle className="flex items-center gap-2">
-                        <TrendingUp className="h-5 w-5" />
-                        Live Market Rates
-                      </CardTitle>
-                      <CardDescription>
-                        {filteredRates.length} rates found • Updated every hour
-                      </CardDescription>
-                    </div>
-                    <div className="flex gap-2">
-                      <Button
-                        variant={viewMode === "list" ? "default" : "outline"}
-                        size="sm"
-                        onClick={() => setViewMode("list")}
-                      >
-                        List
-                      </Button>
-                      <Button
-                        variant={viewMode === "grid" ? "default" : "outline"}
-                        size="sm"
-                        onClick={() => setViewMode("grid")}
-                      >
-                        Grid
-                      </Button>
-                    </div>
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  {filteredRates.length === 0 ? (
-                    <div className="text-center py-8">
-                      <p className="text-muted-foreground">No rates found matching your search</p>
-                    </div>
-                  ) : (
-                    <div className={viewMode === "grid" ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" : "space-y-3"}>
-                      {filteredRates.map((rate, index) => {
-                        const ChangeIcon = getChangeIcon(rate.change)
-                        const isAlertSet = priceAlerts.includes(rate.id)
-                        
-                        return (
-                          <motion.div
-                            key={rate.id}
-                            initial={{ opacity: 0, x: -20 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            transition={{ delay: 0.5 + index * 0.05 }}
-                            className={viewMode === "grid" ? "p-4 rounded-lg border hover:bg-accent/50 transition-colors" : "flex items-center justify-between p-4 rounded-lg border hover:bg-accent/50 transition-colors"}
-                          >
-                            {viewMode === "grid" ? (
-                              <div className="space-y-3">
-                                <div className="flex items-center justify-between">
-                                  <div className="flex items-center gap-3">
-                                    <div className="p-2 rounded-lg bg-primary/10">
-                                      <div className="h-8 w-8 rounded-full bg-primary/20 flex items-center justify-center">
-                                        <span className="text-sm font-semibold text-primary">
-                                          {rate.crop.charAt(0)}
-                                        </span>
-                                      </div>
-                                    </div>
-                                    <div>
-                                      <h4 className="font-semibold">{rate.crop}</h4>
-                                      <div className="flex items-center gap-1 text-sm text-muted-foreground">
-                                        <MapPin className="h-3 w-3" />
-                                        {rate.mandi}
-                                      </div>
-                                    </div>
-                                  </div>
-                                  <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    onClick={() => togglePriceAlert(rate.id)}
-                                    className={isAlertSet ? "text-yellow-600" : "text-muted-foreground"}
-                                  >
-                                    <Bell className="h-4 w-4" />
-                                  </Button>
-                                </div>
-                                
-                                <div className="text-2xl font-bold">
-                                  {formatPrice(rate.price)}
-                                </div>
-                                <div className="text-sm text-muted-foreground mb-2">
-                                  {rate.unit}
-                                </div>
-                                
-                                <div className="flex items-center justify-between">
-                                  <div className={`flex items-center gap-1 ${getChangeColor(rate.change)}`}>
-                                    <ChangeIcon className="h-4 w-4" />
-                                    <span className="text-sm font-medium">
-                                      {rate.change > 0 ? '+' : ''}{rate.change}%
-                                    </span>
-                                  </div>
-                                  <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                                    <Clock className="h-3 w-3" />
-                                    {rate.lastUpdated}
-                                  </div>
-                                </div>
-                              </div>
-                            ) : (
-                              <>
-                                <div className="flex items-center gap-4">
-                                  <div className="p-2 rounded-lg bg-primary/10">
-                                    <div className="h-8 w-8 rounded-full bg-primary/20 flex items-center justify-center">
-                                      <span className="text-sm font-semibold text-primary">
-                                        {rate.crop.charAt(0)}
-                                      </span>
-                                    </div>
-                                  </div>
-                                  
-                                  <div>
-                                    <h4 className="font-semibold">{rate.crop}</h4>
-                                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                                      <MapPin className="h-3 w-3" />
-                                      {rate.mandi}
-                                    </div>
-                                  </div>
-                                </div>
-                                
-                                <div className="text-right">
-                                  <div className="text-lg font-bold">
-                                    {formatPrice(rate.price)}
-                                  </div>
-                                  <div className="text-sm text-muted-foreground">
-                                    {rate.unit}
-                                  </div>
-                                </div>
-                                
-                                <div className="flex items-center gap-2">
-                                  <div className={`flex items-center gap-1 ${getChangeColor(rate.change)}`}>
-                                    <ChangeIcon className="h-4 w-4" />
-                                    <span className="text-sm font-medium">
-                                      {rate.change > 0 ? '+' : ''}{rate.change}%
-                                    </span>
-                                  </div>
-                                </div>
-                                
-                                <div className="text-right text-xs text-muted-foreground">
-                                  <div className="flex items-center gap-1">
-                                    <Clock className="h-3 w-3" />
-                                    {rate.lastUpdated}
-                                  </div>
-                                </div>
-                                
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  onClick={() => togglePriceAlert(rate.id)}
-                                  className={isAlertSet ? "text-yellow-600" : "text-muted-foreground"}
-                                >
-                                  <Bell className="h-4 w-4" />
-                                </Button>
-                              </>
-                            )}
-                          </motion.div>
-                        )
-                      })}
-                    </div>
-                  )}
                 </CardContent>
               </Card>
             </motion.div>
@@ -561,13 +452,13 @@ export default function MarketRatesPage() {
                         <div>
                           <p className="font-medium text-green-800">Wheat prices surging</p>
                           <p className="text-sm text-green-700">
-                            Strong demand and lower supply are driving wheat prices up by 2.5%. 
+                            Strong demand and lower supply are driving wheat prices up by 2.5%.
                             Consider selling if you have stored wheat.
                           </p>
                         </div>
                       </div>
                     </div>
-                    
+
                     <div className="p-4 rounded-lg bg-blue-50 border border-blue-200">
                       <div className="flex items-start gap-3">
                         <div className="p-1 rounded-full bg-blue-100 mt-1">
@@ -576,13 +467,13 @@ export default function MarketRatesPage() {
                         <div>
                           <p className="font-medium text-blue-800">Rice market stable</p>
                           <p className="text-sm text-blue-700">
-                            Rice prices remain stable with slight fluctuations. 
+                            Rice prices remain stable with slight fluctuations.
                             Good time for both buying and selling.
                           </p>
                         </div>
                       </div>
                     </div>
-                    
+
                     <div className="p-4 rounded-lg bg-orange-50 border border-orange-200">
                       <div className="flex items-start gap-3">
                         <div className="p-1 rounded-full bg-orange-100 mt-1">
@@ -591,7 +482,7 @@ export default function MarketRatesPage() {
                         <div>
                           <p className="font-medium text-orange-800">Cotton prices declining</p>
                           <p className="text-sm text-orange-700">
-                            Cotton prices down by 2.1% due to increased imports. 
+                            Cotton prices down by 2.1% due to increased imports.
                             Consider waiting for better prices.
                           </p>
                         </div>
@@ -627,7 +518,7 @@ export default function MarketRatesPage() {
                         {priceAlerts.map(alertId => {
                           const rate = marketRates.find(r => r.id === alertId)
                           if (!rate) return null
-                          
+
                           return (
                             <div key={alertId} className="flex items-center justify-between p-3 rounded-lg bg-yellow-50 border border-yellow-200">
                               <div>
@@ -654,6 +545,8 @@ export default function MarketRatesPage() {
                 </CardContent>
               </Card>
             </motion.div>
+
+
           </motion.div>
         </div>
       </main>

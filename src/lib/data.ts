@@ -1,12 +1,25 @@
 // Dummy data for the FarmerAI application
 
 export interface WeatherData {
+  location: {
+    name: string
+    country?: string
+    coordinates?: {
+      lat: number
+      lon: number
+    }
+  }
   current: {
     temperature: number
     condition: string
     humidity: number
     windSpeed: number
     icon: string
+    feelsLike?: number
+    pressure?: number
+    visibility?: number
+    sunrise?: string
+    sunset?: string
   }
   forecast: Array<{
     date: string
@@ -51,6 +64,14 @@ export interface ChatMessage {
 
 // Dummy weather data
 export const weatherData: WeatherData = {
+  location: {
+    name: "Delhi, India",
+    country: "India",
+    coordinates: {
+      lat: 28.6139,
+      lon: 77.2090
+    }
+  },
   current: {
     temperature: 28,
     condition: "Partly Cloudy",
